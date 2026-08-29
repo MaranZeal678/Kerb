@@ -49,6 +49,7 @@ docs/                Architecture, roadmap, demo script, concept evaluation
 
 ## Documents
 
+- **[KERBEROS_ELITE_PRODUCT_EVALUATION_REPORT.md](KERBEROS_ELITE_PRODUCT_EVALUATION_REPORT.md) — the gstack elite evaluation and final spec. Where it conflicts with the docs below, the report wins.**
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — full system design with diagrams
 - [docs/ROADMAP.md](docs/ROADMAP.md) — tiered build plan with estimates
 - [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) — the 4-minute demo, timed
