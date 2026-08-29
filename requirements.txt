@@ -1,0 +1,6 @@
+reflex>=0.6
+mistralai>=1.2
+runloop-api-client
+playwright
+numpy
+python-dotenv
