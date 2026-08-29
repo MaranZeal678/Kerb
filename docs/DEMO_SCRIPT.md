@@ -51,6 +51,12 @@ Trigger Sentinel: replay fails in a Runloop devbox → repair agent diagnoses dr
 
 > "Tutorials, support, automation, and QA were never four products. They're one plan at four levels of trust. Kerberos is the layer that lets any software teach you, help you, or just do it for you — safely."
 
+## Vocabulary guardrails (binding — PostHog AI collision check, report §Review 7b)
+
+- Never say **"session replay"** — on stage Sentinel **"re-runs every guide in a sandbox."**
+- The Sentinel screen is the **"verification board"** — never "analytics," "insights," or "dashboard."
+- Never pitch "AI that navigates a UI"; pitch the artifact — one compiled, validated plan at four levels of trust.
+
 ## Contingency notes
 
 - If Runloop is unreachable on stage: pre-recorded receipt + live everything else; say so honestly, judges forgive infra, not fakery.

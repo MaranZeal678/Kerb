@@ -231,6 +231,30 @@ Thesis sharpened to the §2 one-liner. Differentiation answers: not-a-RAG-chatbo
 | Skeptical end user | "I don't want a tour, I want my refund done." | ⚪ Cosmetic | That *is* Autopilot, and it's the first thing shown. |
 | (cross-cutting) | "Everything runs on an app you built — you control both sides." | 🔴 Fatal if unaddressed | Instrumentation-diff slide (~12 lines of `data-guide` attributes = the entire integration surface) + honest framing ("any app that can add 12 data attributes gets all four heads") + stretch second app if Phase E finishes early. Cannot be fully eliminated in a weekend; can be defused. |
 
+### Review 7b — Incumbent collision check: PostHog AI (owner-requested)
+
+Checked against PostHog's current docs (posthog.com/docs/posthog-ai/overview, /docs/max-ai). **Verdict: no structural overlap; two cosmetic pattern-match risks, both defused below.**
+
+What PostHog AI is: an embedded **product analyst** over PostHog's own analytics data — natural-language queries → insights, SQL, dashboards, session replays, feature flags, surveys, and coding tasks, inside PostHog's platform. What it is not (per their own docs): in-app guidance for third-party apps, UI automation of other companies' software, self-healing selectors, sandboxed execution, or graded autonomy.
+
+Why Kerberos cannot be mistaken for it, dimension by dimension:
+
+| Dimension | PostHog AI | Kerberos |
+|---|---|---|
+| Substrate | PostHog's own analytics data (events, persons, sessions) | Any third-party app's *interface* + that company's policy docs |
+| Output artifact | Insights, SQL, dashboards, charts | A validated, executable Guide Plan (steps against a selector registry) |
+| Job | Answer "what happened in my product?" | Teach, assist, or perform "do this task in this software" |
+| User | PM/analyst studying their own product | Operator of someone else's line-of-business software |
+| Trust model | Assistant creates artifacts for review | Autonomy dial + per-step grounding ceilings + sandbox-first execution |
+| Loop | Conversational memory | Continuous sandbox replay + self-healing selector registry |
+| Analytics | Is the product | Does not exist in the product (pruned in Review 8) |
+
+**Cosmetic risks and guardrails (binding on demo copy):**
+1. **The word "replay."** PostHog's flagship feature is *session replay* (recordings of users). Sentinel "replay" means *test re-execution*. Guardrail: never say "session replay"; on stage say "Sentinel **re-runs** every guide in a sandbox" and label the board a **verification board / CI for guides**, never "analytics" or "insights."
+2. **"AI that uses the app's UI."** Max navigates PostHog's own UI as a convenience feature of an analyst. Guardrail: the pitch never leads with "AI that navigates a UI"; it leads with the artifact ("one compiled, validated plan at four levels of trust") — which is also just the stronger pitch. If a judge raises it: "PostHog AI tells you what happened in your product; Kerberos does the work inside any product — and proves its guidance still works every night."
+
+No features were removed or added by this check; the §4 feature set already contains zero analytics surface. The one change is vocabulary discipline in §10's narration, now binding.
+
 ### Review 8 — Feature pruning (Value = Demo Impact × Differentiation × Feasibility, each /5)
 | Feature | I×D×F | Verdict |
 |---|---|---|

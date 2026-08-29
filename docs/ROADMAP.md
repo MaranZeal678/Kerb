@@ -33,7 +33,7 @@ Estimates assume 2 focused builders. Demo impact is judged against the 4-minute 
 | # | Feature | Difficulty | Est. | Depends on | Demo impact |
 |---|---|---|---|---|---|
 | 3.1 | Escalation flow: low-confidence goal → human handoff card with partial plan | Low | 2 h | 2.3 | Medium |
-| 3.2 | Guide analytics: per-plan success rate from Sentinel history | Low | 2 h | 2.4 | Medium |
+| 3.2 | ~~Guide analytics~~ CUT per evaluation report (PostHog-collision + pruning): only a single per-plan success stat on the Sentinel verification board survives | — | — | — | — |
 | 3.3 | Second target app (tiny) to prove engine portability | Medium | 4 h | Tier 1 | Medium — nice closing beat |
 | 3.4 | Voice-triggered goals | Low | 2 h | 1.4 | Low — cut first |
 
