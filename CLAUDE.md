@@ -1,6 +1,6 @@
 # Kerberos — project instructions
 
-Read [README.md](README.md) for the product concept. The current source of truth for scope and build order is [KERBEROS_ELITE_PRODUCT_EVALUATION_REPORT.md](KERBEROS_ELITE_PRODUCT_EVALUATION_REPORT.md) — where it conflicts with docs/ROADMAP.md or docs/DEMO_SCRIPT.md, the report wins.
+Read [README.md](README.md) for the product concept. The current source of truth for scope, contracts, and build order is [KERBEROS_MVP_SPEC.md](KERBEROS_MVP_SPEC.md) (v1.0), which responds to and supersedes [KERBEROS_ELITE_PRODUCT_EVALUATION_REPORT.md](KERBEROS_ELITE_PRODUCT_EVALUATION_REPORT.md); both supersede docs/ROADMAP.md and docs/DEMO_SCRIPT.md on conflict.
 
 Implementation is gated: do not build the MVP until the project owner has reviewed the evaluation report and given an explicit green light.
 
