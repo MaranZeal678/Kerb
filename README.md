@@ -55,6 +55,15 @@ docs/                Architecture, roadmap, demo script, concept evaluation
 - [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) — the 4-minute demo, timed
 - [docs/CONCEPT_EVALUATION.md](docs/CONCEPT_EVALUATION.md) — the 10 concepts considered and why this one won
 
-## Status
+## Status: WORKING MVP ✅
 
-Planning + scaffold committed. Implementation follows the roadmap tiers (Tier 1 = Meridian app, selector registry, plan compiler, Guide/Copilot modes). Scaffold code is structural and not yet run end-to-end.
+All four heads verified live in the browser (2026-08-29): RAG-grounded compile with per-step grounding bands, Guide spotlight walkthrough, Copilot confirm-gating, Autopilot sandbox rehearsal → receipt → live run with input freeze and confidence gate, Sentinel verification board, judge-driven sabotage, and the self-heal loop (red → evidence-cited patch → validator → green re-replay in 23s → registry v2). Escalation card fires on the disputed claim.
+
+Run it:
+```
+python3.11 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/playwright install chromium
+cp .env.example .env   # add MISTRAL_API_KEY
+.venv/bin/reflex run --frontend-port 3100 --backend-port 8100
+```
+Reset demo state between runs: `scripts/demo_reset.sh`. Feature screenshots: `scripts/capture_features.py`.

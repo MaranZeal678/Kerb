@@ -106,7 +106,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
   padding:.3rem .8rem; border-radius:999px; background:rgba(15,11,26,.8);}
 
 /* ============ rail ============ */
-.rail{padding:1.1rem; background:var(--bg2); overflow-y:auto; max-height:calc(100vh - 57px); z-index:66; position:relative;}
+.rail{padding:1.1rem; background:var(--bg2); overflow-y:auto; max-height:calc(100vh - 57px); z-index:72; position:relative;}
 .rail-sec{margin-bottom:1rem;}
 .rail-head{display:flex; justify-content:space-between; margin-bottom:.6rem;}
 .rail-label{font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--accent);}
