@@ -1,120 +1,109 @@
-# Kerberos Architecture
+# Kerb - System Architecture
 
-One engine, four projections. Everything below exists to make a single artifact — the **Guide Plan** — compilable, safe, executable, and self-maintaining.
+This document explains how Kerb is built and, more importantly, why it is built this way. The reference contracts live in [SPEC.md](SPEC.md); decisions taken under constraint live in [DECISIONS.md](DECISIONS.md).
 
-## System overview
+## The organizing idea
 
-```mermaid
-flowchart TB
-    subgraph UI["Reflex app (pure Python, websocket state)"]
-        TOGGLE["Autonomy dial<br/>Guide / Copilot / Autopilot"]
-        OVERLAY["Guidance overlay<br/>highlights · pointer · step card · citations"]
-        MERIDIAN["Meridian demo app<br/>instrumented with data-guide selectors"]
-    end
+Kerb has exactly one first-class object: the **Guide Plan**. Everything upstream exists to author and admit one; everything downstream is a projection of one.
 
-    subgraph ENGINE["Plan Engine (server side)"]
-        RAG["RAG pipeline<br/>chunk → embed → cosine retrieve<br/>(Mistral embeddings)"]
-        PLANNER["Plan compiler<br/>(Mistral chat, JSON-constrained)"]
-        REGISTRY["Approved selector registry<br/>single source of truth"]
-        VALIDATOR["Server-side validator<br/>rejects unapproved selectors,<br/>impossible transitions, low-confidence auto-steps"]
-        CONF["Confidence gate<br/>retrieval score × model confidence<br/>→ max autonomy per step"]
-    end
+This is the whole architecture in a sentence, and it produces the system's unusual properties almost for free. Because a plan is data rather than prose, it can be executed. Because it can be executed, it can be replayed. Because it can be replayed, it can be verified. Because it can be verified, it can be repaired. A system whose guidance is written as English paragraphs has none of these affordances, which is why documentation everywhere rots quietly and automation everywhere breaks loudly.
 
-    subgraph RUNLOOP["Runloop devboxes"]
-        DRYRUN["Autopilot dry-run<br/>Playwright vs app clone → execution receipt"]
-        SENTINEL["Sentinel replay loop<br/>every plan, continuously"]
-        HEAL["Repair agent<br/>drift diagnosis → registry/plan patch → revalidate"]
-    end
+```
+                         one artifact, four readings
 
-    KB["Policy & SOP docs"] --> RAG
-    RAG --> PLANNER
-    REGISTRY --> PLANNER
-    PLANNER --> VALIDATOR
-    CONF --> VALIDATOR
-    VALIDATOR -->|"validated Guide Plan"| TOGGLE
-    TOGGLE --> OVERLAY
-    OVERLAY --> MERIDIAN
-    VALIDATOR --> DRYRUN
-    DRYRUN -->|"receipt: screenshots + state diff"| TOGGLE
-    REGISTRY <--> SENTINEL
-    SENTINEL -->|"failure"| HEAL
-    HEAL -->|"patch"| REGISTRY
-    HEAL -->|"revalidate"| VALIDATOR
+   author  ─────────────►  Guide Plan  ─────────────►  render     (teach)
+                              │  ▲                     execute    (assist)
+                              │  │                     rehearse   (perform)
+                              ▼  │                     replay     (verify)
+                          repair ─┘
 ```
 
-## The Guide Plan (the one artifact)
+## Authoring path
 
-```json
-{
-  "goal": "Issue a refund for claim #4821",
-  "sources": [{"doc": "refund-policy.md", "chunk": 14, "score": 0.91}],
-  "steps": [
-    {
-      "id": 3,
-      "selector": "claims.refund.reason-code",
-      "action": "select",
-      "value": "RC-07",
-      "why": "Refunds over $500 require a reason code (policy §4.2)",
-      "retrieval_confidence": 0.91,
-      "model_confidence": 0.88,
-      "max_autonomy": "autopilot"
-    }
-  ]
-}
+A stated outcome becomes an admitted plan through four stages, in this order. The order is a safety property, not an implementation detail.
+
+### 1. Policy gate — `engine/planner.py: policy_gate`
+
+Eligibility is decided *before* any plan is authored. Is this a goal the system is permitted to plan at all? A refund against a disputed claim is prohibited by policy, so it never reaches a compiler; it returns a handoff naming the blocking rule.
+
+This placement is the point. If eligibility were checked inside a compiler, a sufficiently fluent model-authored plan could route around a prohibition simply by not mentioning it. Because the gate runs first and is compiler-independent, no authoring strategy can produce a plan for a forbidden outcome.
+
+### 2. Retrieval — `engine/rag.py`
+
+Policy documents are chunked on heading boundaries, embedded, and retrieved by cosine similarity. Each retrieved chunk carries its score forward into the plan, because those scores are later used as evidence and must survive to the artifact.
+
+With no endpoint configured, retrieval falls back to IDF-weighted lexical scoring over the same chunks. The fallback is not a degraded mode bolted on for demos; it is what keeps the system's guarantees independent of a network.
+
+### 3. Compilation — `engine/planner.py`
+
+The compiler receives the goal, the retrieved policy, and `registry.planner_view()` — logical control ids, human labels, permitted actions, and routes. **It never receives a selector.** This is the difference between constraining a model with instructions and constraining it structurally: a control that is not registered cannot be named, so it cannot be acted upon, so hallucination becomes a compile-time rejection rather than a runtime hazard.
+
+Two strategies author plans behind one interface. The model strategy writes fluent, policy-quoting steps. The deterministic strategy encodes the flow directly. Model output that fails grading is not treated as an escalation — the deterministic compiler simply authors the plan instead. The user's experience of a slow, absent, or poor endpoint is a plan phrased more plainly, never a missing plan.
+
+### 4. Grading and validation — `engine/planner.py: _postpass`, `engine/validator.py`
+
+Grading is applied *after* authoring by code neither compiler controls:
+
+```
+grounding(step) = retrieval_score(cited chunk) x citation_coverage(step)
+
+    >= 0.75   may run unattended
+0.45 - 0.75   must be confirmed, whatever the dial says
+     < 0.45   escalate rather than perform
 ```
 
-Every field matters to a different mode: Guide renders `why` + citations; Copilot executes `action` with per-step confirmation; Autopilot needs `max_autonomy` clearance on **every** step; Sentinel replays `steps` verbatim as a regression test.
+`citation_coverage` is the fraction of a step's justification that is actually supported by the chunk it cites — computable, inspectable, and impossible for the model to inflate by asserting confidence. This is deliberate: a model's self-reported certainty is not evidence, and treating it as evidence is the most common way these systems mislead people.
 
-## Component notes
+The validator then runs as plain Python with no model in the path. It checks registration, permitted action, value type, **route reachability** (step N's route must follow from step N-1, so a plan cannot act on a page the flow never reaches), and that no step claims more autonomy than its grounding supports. Failures are named and surfaced, never swallowed. Nothing renders or executes without passing.
 
-### 1. Selector registry (`kerberos/engine/registry.py`)
-Canonical map: logical name → CSS selector (`[data-guide="claims.refund.reason-code"]`) + allowed actions + human label. The planner is prompted **only with logical names**, never raw CSS — it cannot invent a selector that isn't registered. The registry is versioned; Sentinel patches create new versions with a diff trail.
+## Projection path
 
-### 2. RAG pipeline (`kerberos/engine/rag.py`)
-`chunkMarkdown → Mistral embeddings → in-memory vector store → cosine top-k`. Each retrieval carries its score forward into the plan; a plan step citing a chunk below threshold is demoted (Guide-only) or triggers escalation ("I can't do this safely — here's a human handoff").
+One state object holds the mode, the plan, and the cursor. Switching modes re-projects; it never recompiles, and the visible `plan_id` does not change — which is how "one engine, three behaviors" is demonstrated rather than claimed.
 
-### 3. Plan compiler (`kerberos/engine/planner.py`)
-Mistral chat call with JSON-constrained output: goal + retrieved chunks + registry (logical names, labels, allowed actions) → Guide Plan. Compilation is stateless and cacheable; the same goal recompiles only when docs or registry change.
+| Mode | Projection |
+|---|---|
+| Guide | Spotlight on the current control, justification and citation beside it; advances when the operator acts on the highlighted control |
+| Copilot | Proposes and performs each step on confirmation; a step in the confirm band stops regardless of the dial |
+| Autopilot | Rehearses in an isolated sandbox, presents a receipt, then performs live with the surface frozen |
 
-### 4. Validator (`kerberos/engine/validator.py`)
-Pure-Python server-side gate, no LLM. Rejects: unknown selectors, actions not allowed for that selector, value types that don't match the control, and any step marked for auto-execution whose combined confidence is below the autopilot threshold. **Nothing renders or executes without passing this.** This is the safety story in one file.
+Effective autonomy for a step is `min(selected_mode, step.autonomy_ceiling)`. The dial raises a ceiling for the session; it cannot raise the ceiling on a step whose evidence does not support it.
 
-### 5. Autonomy dial (Reflex state)
-`mode: guide | copilot | autopilot` is a single state var. The same validated plan streams over the websocket; the frontend projection changes, the plan never does. Effective autonomy per step = `min(user_mode, step.max_autonomy)` — the user can dial up, but a low-confidence step still stops and asks.
+### Two executors, one interface
 
-### 6. Runloop execution
-- **Dry-run**: Autopilot first launches the app in a devbox, runs the plan with Playwright, captures per-step screenshots + final state diff → execution receipt shown to the user before live replay.
-- **Sentinel**: a loop that replays every stored plan in fresh devboxes on a schedule (or on demand, for the demo). Failure output (failed step, DOM snapshot) feeds the repair agent.
-- **Repair agent**: Mistral call with the failed step, old selector entry, and the new DOM snapshot → proposed registry patch → validator + re-replay in a fresh devbox → patch merges only on green.
+Live execution mutates the same application state a human interaction would, so there is no separate "automation surface" that can drift from the real one. Sandbox execution drives a real browser session against a fresh instance. Both satisfy one interface, which is why rehearsal, scheduled verification, and repair validation all exercise the identical code path an operator does.
 
-### 7. Reflex specifics
-- `custom_attrs={"data-guide": "..."}` instruments Meridian components; the registry is generated from the same Python constants, so app and registry cannot drift apart *silently* — and when we sabotage them on purpose for the demo, Sentinel is what catches it.
-- Highlight overlay = absolutely-positioned component driven by server state; step advancement streams over the existing websocket, no polling, no injected JS.
+## Verification and repair
 
-## Sequence: one question, three projections
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant R as Reflex state
-    participant E as Plan engine
-    participant D as Runloop devbox
-
-    U->>R: "Issue a refund for claim #4821"
-    R->>E: compile(goal)
-    E->>E: RAG retrieve → plan → validate → confidence-gate
-    E-->>R: validated Guide Plan (streamed)
-    alt Guide mode
-        R-->>U: highlight step 1 + why + citation; advance on user action
-    else Copilot mode
-        R-->>U: propose step 1; on confirm, execute; repeat
-    else Autopilot mode
-        R->>D: dry-run full plan (Playwright)
-        D-->>R: execution receipt
-        R-->>U: show receipt; on confirm, replay live with reasoning ticker
-    end
+```
+   stored plans
+        │
+        ▼
+   replay in isolated sandbox ──── clean ────► board: passing
+        │
+      failure + page evidence
+        │
+        ▼
+   repair agent: match on role, region, visible label
+        │
+        ├── evidence supports one candidate ──► patch ──► validate ──► re-run
+        │                                                                │
+        │                                                    clean ──────┴──► admit as new registry version
+        │
+        └── evidence insufficient ──► escalate with reasoning
 ```
 
-## Safety model, in one paragraph
+The repair agent is constrained the same way the compiler is. It may only propose a replacement for the control that actually failed, chosen from controls observed on the changed page that are unregistered and role-compatible with the failed action. Where several candidates survive that filter, a model breaks the tie — but it selects *among evidence*, and cannot introduce a candidate the page did not contain.
 
-The LLM's authority ends at proposing logical steps. The registry bounds *where* it can act, the validator bounds *what* it can do there, confidence bounds *how autonomously*, and Runloop bounds *where side effects happen first*. Every layer is inspectable in the demo, which is exactly what makes technical judges trust the autonomy.
+A patch is admitted only after it passes validation and re-executes cleanly. This ordering matters more than it appears: a repair that turns a failing plan green by pointing at the wrong control is worse than the failure it replaced, because it converts a visible problem into an invisible one.
+
+The registry is versioned and patches append rather than overwrite, so any admitted repair carries its evidence and its proof and can be rolled back.
+
+## Design commitments
+
+**The model is the weakest component by construction.** It proposes wording and breaks ties. It does not decide eligibility, does not choose what it is allowed to touch, does not grade itself, and does not reach the live interface before a sandbox does. Disable it entirely and the system still produces correct, conservative plans.
+
+**Failures are named.** A rejected plan reports the rule that rejected it. An escalation reports the blocking policy and what had already been done. A repair that cannot be justified reports why. Silent degradation is the failure mode that makes systems like this untrustworthy, so there is none.
+
+**Selectors live in exactly one place.** The registry is the sole location where a logical control id maps to something concrete. Adapting Kerb to another application is an exercise in describing controls, not in modifying the engine — nothing in `kerb/engine` imports the bundled demonstration application.
+
+**Boring where it is allowed to be.** In-memory vectors, JSON files for plans, a subprocess for isolation. Complexity is spent on the verification loop, which is the part that is actually hard.

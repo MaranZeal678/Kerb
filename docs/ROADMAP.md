@@ -1,4 +1,4 @@
-# Kerberos Build Roadmap
+# Kerb Build Roadmap
 
 Estimates assume 2 focused builders. Demo impact is judged against the 4-minute script in [DEMO_SCRIPT.md](DEMO_SCRIPT.md).
 
@@ -8,8 +8,8 @@ Estimates assume 2 focused builders. Demo impact is judged against the 4-minute 
 |---|---|---|---|---|---|
 | 1.1 | Meridian demo app in Reflex (claims list, claim detail, refund flow, ~12 instrumented controls) | Medium | 4–5 h | — | Critical — it's the stage |
 | 1.2 | Selector registry + server-side validator | Low | 2 h | 1.1 | Critical — the safety story |
-| 1.3 | RAG pipeline over 3–4 policy docs (Mistral embeddings, in-memory store) | Medium | 3 h | — | High — grounds every plan |
-| 1.4 | Plan compiler (Mistral chat, JSON-constrained, confidence fields) | Medium | 3 h | 1.2, 1.3 | Critical |
+| 1.3 | RAG pipeline over 3–4 policy docs (embeddings, in-memory store) | Medium | 3 h | — | High — grounds every plan |
+| 1.4 | Plan compiler (model-authored, JSON-constrained, grounding fields) | Medium | 3 h | 1.2, 1.3 | Critical |
 | 1.5 | Guide mode: overlay, highlight, pointer, step card with citations | Medium | 4 h | 1.1, 1.4 | Critical — first visual proof |
 | 1.6 | Copilot mode: step proposal + confirm-to-execute via shared state | Medium | 3 h | 1.5 | High |
 | 1.7 | Autonomy dial UI (the toggle itself — make it gorgeous) | Low | 2 h | 1.5, 1.6 | Critical — it's the thesis |

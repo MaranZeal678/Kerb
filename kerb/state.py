@@ -1,4 +1,4 @@
-"""Kerberos global state — the trust dial IS this state (spec §5.1).
+"""Kerb global state — the trust dial IS this state (spec §5.1).
 
 One validated Guide Plan; mode is one variable; every mode is a projection.
 The live executor lives here (it mutates the same state a human would).
@@ -17,7 +17,7 @@ from .engine.executor import replay as sandbox_replay
 from .meridian import sabotage
 from .meridian.data import SEED_CLAIMS
 
-BASE_URL = os.environ.get("KERBEROS_BASE_URL", "http://localhost:3000")
+BASE_URL = os.environ.get("KERB_BASE_URL", "http://localhost:3000")
 
 
 def _plain(v):
@@ -38,7 +38,7 @@ class KState(rx.State):
     note_text: str = ""
     toast: str = ""
 
-    # ---- Kerberos ----
+    # ---- Kerb ----
     mode: str = "guide"                   # guide | copilot | autopilot
     plan: dict = {}
     escalation: dict = {}
@@ -373,7 +373,7 @@ class KState(rx.State):
 
     @rx.event
     def copilot_do_step(self):
-        """Copilot: human confirms, Kerberos performs the current step."""
+        """Copilot: human confirms, Kerb performs the current step."""
         if not self.has_plan or self.executing:
             return
         steps = self.plan["steps"]
@@ -426,7 +426,7 @@ class KState(rx.State):
                 if gate:
                     self.awaiting = True
                     self.await_msg = (f"Step {i+1} is weakly grounded ({step['grounding']:.2f}) — "
-                                      "Kerberos will not act on it autonomously. Confirm to proceed.")
+                                      "Kerb will not act on it autonomously. Confirm to proceed.")
             if gate:
                 while True:
                     await asyncio.sleep(0.25)

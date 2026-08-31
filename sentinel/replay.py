@@ -2,9 +2,9 @@
 repair agent; merge a patch only after it passes the validator AND a green re-replay.
 """
 
-from kerberos.engine import registry as regmod
-from kerberos.engine.executor import replay as sandbox_replay
-from kerberos.engine.validator import validate_patch
+from kerb.engine import registry as regmod
+from kerb.engine.executor import replay as sandbox_replay
+from kerb.engine.validator import validate_patch
 
 from . import heal
 

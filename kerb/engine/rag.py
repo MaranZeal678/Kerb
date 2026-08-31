@@ -1,8 +1,8 @@
-"""RAG pipeline: chunk policy markdown -> embed (Mistral) or lexical fallback -> top-k retrieve.
+"""Retrieval: chunk policy markdown -> embed (or lexical fallback) -> top-k cosine retrieve.
 
-Grounding inputs (spec §4.3): retrieval score (this module) x citation coverage
+Grounding inputs: retrieval score (this module) x citation coverage
 (also this module — fraction of a step's `why` content-words entailed by its chunk).
-Both are computable and deterministic; no uncalibrated "model confidence" anywhere.
+Both are computable and deterministic; no uncalibrated model self-assessment anywhere.
 """
 
 import math
@@ -11,6 +11,8 @@ import re
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+from . import llm
 
 load_dotenv(Path(__file__).parents[2] / ".env")
 
@@ -51,14 +53,9 @@ def _ensure() -> None:
     _corpus = []
     for f in sorted(DOCS_DIR.glob("*.md")):
         _corpus.extend(_chunk_markdown(f.read_text(), f.name))
-    key = os.environ.get("MISTRAL_API_KEY")
-    if key:
+    if llm.available():
         try:
-            from . import mistral_client
-            client = mistral_client()
-            resp = client.embeddings.create(model="mistral-embed",
-                                            inputs=[c["text"] for c in _corpus])
-            _vectors = [d.embedding for d in resp.data]
+            _vectors = llm.embed([c["text"] for c in _corpus])
             _mode = "embed"
             return
         except Exception:
@@ -85,9 +82,7 @@ def retrieve(query: str, k: int = 4) -> list[dict]:
     _ensure()
     if _mode == "embed":
         try:
-            from . import mistral_client
-            client = mistral_client()
-            qv = client.embeddings.create(model="mistral-embed", inputs=[query]).data[0].embedding
+            qv = llm.embed([query])[0]
             def cos(a, b):
                 dot = sum(x * y for x, y in zip(a, b))
                 na = math.sqrt(sum(x * x for x in a)); nb = math.sqrt(sum(x * x for x in b))

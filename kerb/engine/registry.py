@@ -13,8 +13,8 @@ from pathlib import Path
 
 # Patches persist on disk so every process — backend, replay subprocesses,
 # CLI — sees the same registry version (and the trail survives restarts).
-PATCHES_FILE = Path(os.environ.get("KERBEROS_STATE_DIR",
-                                   Path.home() / ".kerberos")) / "registry_patches.json"
+PATCHES_FILE = Path(os.environ.get("KERB_STATE_DIR",
+                                   Path.home() / ".kerb")) / "registry_patches.json"
 
 
 @dataclass(frozen=True)

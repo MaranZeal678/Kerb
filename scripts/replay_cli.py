@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parents[1] / ".env")
 
-from kerberos.engine.executor import sandbox_replay  # noqa: E402
+from kerb.engine.executor import sandbox_replay  # noqa: E402
 
 
 def main() -> None:

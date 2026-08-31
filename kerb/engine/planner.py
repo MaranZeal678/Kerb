@@ -1,15 +1,16 @@
-"""Plan compiler: goal + RAG + registry planner_view -> validated Guide Plan.
+"""Plan compiler: goal + retrieved policy + registry view -> validated Guide Plan.
 
-Mistral-first with deterministic fallback (decision D-002). Grounding and autonomy
-ceilings are ALWAYS computed by the deterministic post-pass (§4.3) regardless of
-which compiler authored the steps — the LLM never grades itself.
+Model-first with a deterministic fallback, so a slow or absent endpoint degrades
+the wording of a plan, never the availability of one. Grounding scores and
+autonomy ceilings are ALWAYS computed by the deterministic post-pass regardless
+of which compiler authored the steps: the model never grades its own work.
 """
 
 import json
 import os
 import re
 
-from . import rag
+from . import llm, rag
 from . import registry as regmod
 from .validator import validate_plan
 
@@ -59,7 +60,7 @@ def _postpass(goal: str, steps: list[dict], compiler: str) -> dict:
             return {"escalation": {
                 "goal": goal,
                 "reason": f"Required step '{s['why']}' has grounding {s['grounding']:.2f} — below the "
-                          f"{GROUND_CONFIRM} floor. Kerberos will not act where it cannot cite policy.",
+                          f"{GROUND_CONFIRM} floor. Kerb will not act where it cannot cite policy.",
                 "partial_steps": steps[: i - 1],
                 "handoff": "Route to a supervisor with the claim number and the steps already planned.",
             }}
@@ -80,7 +81,14 @@ def _postpass(goal: str, steps: list[dict], compiler: str) -> dict:
     return plan
 
 
-def _deterministic_steps(goal: str, claims: list[dict]) -> list[dict] | dict:
+def policy_gate(goal: str, claims: list[dict]) -> dict | None:
+    """Eligibility check that runs BEFORE any plan is authored.
+
+    This is deliberately compiler-independent. If it lived inside one authoring
+    strategy, a model-authored plan could route around a policy prohibition
+    simply by being fluent. Returns an escalation, or None when the goal is
+    eligible to be planned at all.
+    """
     m = re.search(r"#?(\d{4})", goal)
     if not m or "refund" not in goal.lower():
         return {"escalation": {
@@ -103,6 +111,13 @@ def _deterministic_steps(goal: str, claims: list[dict]) -> list[dict] | dict:
             "handoff": f"Handoff filed: claim #{cid}, requested refund of ${claim['balance_due']:.2f}, "
                        f"blocked by dispute status. Supervisor resolution required before disbursement.",
         }}
+    return None
+
+
+def _deterministic_steps(goal: str, claims: list[dict]) -> list[dict]:
+    """Authoring only. policy_gate() has already established eligibility."""
+    cid = re.search(r"#?(\d{4})", goal).group(1)
+    claim = next(c for c in claims if str(c["id"]) == cid)
     amount = claim["balance_due"]
     big = amount > 500
     steps: list[dict] = [
@@ -130,9 +145,7 @@ def _deterministic_steps(goal: str, claims: list[dict]) -> list[dict] | dict:
     return steps
 
 
-def _mistral_steps(goal: str, claims: list[dict]) -> list[dict]:
-    from . import mistral_client
-    client = mistral_client()
+def _model_steps(goal: str, claims: list[dict]) -> list[dict]:
     context = "\n\n".join(f"[{h['doc']} chunk {h['chunk']}]\n{h['text']}" for h in rag.retrieve(goal, k=4))
     claim_rows = "\n".join(f"- claim #{c['id']}: status={c['status']}, balance_due=${c['balance_due']:.2f}"
                            for c in claims)
@@ -153,31 +166,28 @@ Claims data:
 Goal: {goal}
 
 Return ONLY a JSON object: {{"steps": [...]}} — no prose."""
-    resp = client.chat.complete(
-        model=os.environ.get("KERBEROS_MISTRAL_MODEL", "mistral-small-latest"),
-        messages=[{"role": "user", "content": prompt}],
-        response_format={"type": "json_object"},
-        temperature=0.1,
-    )
-    data = json.loads(resp.choices[0].message.content)
+    data = llm.chat_json(prompt, temperature=0.1)
     steps = data["steps"]
     assert isinstance(steps, list) and steps, "empty plan"
     return steps
 
 
 def compile_plan(goal: str, claims: list[dict]) -> dict:
-    """Returns a validated plan, or {'escalation': ...}, or {'rejected': [...]}"""
-    if os.environ.get("MISTRAL_API_KEY") and not os.environ.get("KERBEROS_FORCE_DETERMINISTIC"):
+    """Returns a validated plan, or {'escalation': ...}, or {'rejected': [...]}.
+
+    Order is the safety property: eligibility is decided before authoring, so no
+    compiler - however fluent - can produce a plan for a prohibited goal.
+    """
+    blocked = policy_gate(goal, claims)
+    if blocked is not None:
+        return blocked
+    if llm.available() and not os.environ.get("KERB_FORCE_DETERMINISTIC"):
         try:
-            steps = _mistral_steps(goal, claims)
-            result = _postpass(goal, steps, "mistral")
+            result = _postpass(goal, _model_steps(goal, claims), "model")
             if result.get("status") == "validated":
                 return result
-            # An LLM-authored plan that fails grading is NOT a real escalation —
-            # fall through to the deterministic compiler (D-002).
+            # A model-authored plan that fails grading is not an escalation:
+            # fall through and let the deterministic compiler author it instead.
         except Exception:
             pass
-    det = _deterministic_steps(goal, claims)
-    if isinstance(det, dict):   # escalation
-        return det
-    return _postpass(goal, det, "deterministic")
+    return _postpass(goal, _deterministic_steps(goal, claims), "deterministic")

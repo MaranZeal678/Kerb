@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
-OUT = Path.home() / ".kerberos" / "pitch"
+OUT = Path.home() / ".kerb" / "pitch"
 OUT.mkdir(parents=True, exist_ok=True)
 BASE = "http://localhost:3100"
 

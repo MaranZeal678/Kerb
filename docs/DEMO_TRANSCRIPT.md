@@ -1,4 +1,4 @@
-# Kerberos — Judge-Facing Demo Transcript (~4:00)
+# Kerb — Judge-Facing Demo Transcript (~4:00)
 
 Canonical spoken script. Vocabulary guardrails (spec §9.4) are baked in: never
 "session replay" / "analytics" / "dashboard" / "model confidence"; Sentinel
@@ -17,7 +17,7 @@ fill; ticker narrates. ~12s. Done.]
 
 "No macro. No script. It did that for the first time just now.
 
-This is Kerberos — named for the three-headed watchdog. Three ways to trust one
+This is Kerb — named for the three-headed watchdog. Three ways to trust one
 guard dog. And a fourth head that never sleeps — which, in about two minutes,
 YOU are going to test personally.
 
@@ -25,7 +25,7 @@ First, the problem. Every software company builds the same four things:
 tutorials nobody reads, support docs that go stale, brittle automations, and UI
 tests that snap every sprint. Four teams. Four vendors. But look closer —
 they're all the same object: a sequence of steps against a real interface.
-Kerberos builds that one artifact — we call it a Guide Plan — and this dial
+Kerb builds that one artifact — we call it a Guide Plan — and this dial
 changes only one thing: how much you trust it."
 
 [Dial → GUIDE. Teal. Docs panel in. Point at the unchanged plan id.]
@@ -47,7 +47,7 @@ policy path."
 
 "One notch up: it does the work, I approve each step. And watch this one — it
 stopped. The policy text behind this step is vague, its grounding score is low,
-and Kerberos will not act on its own where it can't back the action with a
+and Kerb will not act on its own where it can't back the action with a
 citation. It knows what it doesn't know — per step. You can turn the dial up.
 You can't out-dial the evidence."
 
@@ -99,7 +99,7 @@ it."
 [Close. Spin the dial slowly through teal, amber, violet.]
 
 "Tutorials, support, automation, and QA were never four products. They're one
-plan — at four levels of trust. Kerberos. Three heads, one body. And putting it
+plan — at four levels of trust. Kerb. Three heads, one body. And putting it
 on your app is twelve data attributes.
 
 Thank you."
@@ -115,5 +115,5 @@ Thank you."
   "Sandbox link is down, so this clip is from rehearsal — everything else
   you're seeing is live."
 - "Is this like PostHog AI?" → "PostHog AI tells you what happened in your
-  product. Kerberos does the work inside any product — and proves its guidance
+  product. Kerb does the work inside any product — and proves its guidance
   still works every night."

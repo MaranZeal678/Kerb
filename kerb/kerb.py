@@ -1,4 +1,4 @@
-"""Kerberos shell: trust dial + command bar + plan rail + Sentinel drawer (spec §8)."""
+"""Kerb shell: trust dial + command bar + plan rail + Sentinel drawer (spec §8)."""
 
 import reflex as rx
 
@@ -13,8 +13,8 @@ SAB_TARGETS = ["claims.refund.approve", "claims.refund.start", "claims.refund.re
 
 def topbar() -> rx.Component:
     return rx.el.header(
-        rx.el.div(rx.el.span("KERBEROS", class_name="k-brand"),
-                  rx.el.span("three heads · one body", class_name="k-brand-sub"),
+        rx.el.div(rx.el.span("KERB", class_name="k-brand"),
+                  rx.el.span("one plan · three levels of trust", class_name="k-brand-sub"),
                   class_name="k-brand-wrap"),
         rx.el.div(
             *[rx.el.button(label,
@@ -78,7 +78,7 @@ def step_card(s: rx.Var) -> rx.Component:
 
 def escalation_card() -> rx.Component:
     return rx.el.div(
-        rx.el.span("ESCALATION — Kerberos will not act here", class_name="esc-title"),
+        rx.el.span("ESCALATION — Kerb will not act here", class_name="esc-title"),
         rx.el.p(KState.esc_reason, class_name="esc-body"),
         rx.el.p(KState.esc_handoff, class_name="esc-hand mono"),
         class_name="esc-card",
@@ -159,8 +159,8 @@ def rail() -> rx.Component:
             rx.cond(KState.compiling | (KState.esc_reason != "") | (KState.rejected_text != ""),
                     rx.fragment(),
                     rx.el.div(
-                        rx.el.span("KERBEROS", class_name="rail-label mono"),
-                        rx.el.p("Ask for an outcome with ⌘K Ask. The dial sets how much Kerberos does: "
+                        rx.el.span("KERB", class_name="rail-label mono"),
+                        rx.el.p("Ask for an outcome with ⌘K Ask. The dial sets how much Kerb does: "
                                 "Guide teaches, Copilot acts with you, Autopilot rehearses in a sandbox "
                                 "and then does it.", class_name="rail-intro"),
                         class_name="rail-sec")),
@@ -239,4 +239,4 @@ def index() -> rx.Component:
 
 
 app = rx.App(stylesheets=["/styles.css"])
-app.add_page(index, route="/", title="Kerberos", on_load=KState.on_load)
+app.add_page(index, route="/", title="Kerb", on_load=KState.on_load)

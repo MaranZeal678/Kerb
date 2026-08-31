@@ -4,7 +4,7 @@
   isolated browser session against the app. Same contract as the devbox path.
 - RunloopSandbox (key-ready stub): swaps in when RUNLOOP_API_KEY exists.
 
-The live executor lives in kerberos/state.py (it mutates Reflex state directly).
+The live executor lives in kerb/state.py (it mutates Reflex state directly).
 """
 
 import os
@@ -15,8 +15,8 @@ from . import registry as regmod
 
 # Receipts live OUTSIDE the project tree: the dev file-watcher hot-reloads on
 # .png writes, which drops every websocket mid-replay (see docs/DECISIONS.md D-004).
-RECEIPTS = Path(os.environ.get("KERBEROS_RECEIPTS_DIR",
-                               Path.home() / ".kerberos" / "receipts"))
+RECEIPTS = Path(os.environ.get("KERB_RECEIPTS_DIR",
+                               Path.home() / ".kerb" / "receipts"))
 
 _DOM_JS = """els => els.map(e => {
   const r = e.closest('[data-region]');
@@ -26,7 +26,7 @@ _DOM_JS = """els => els.map(e => {
 })"""
 
 
-_LOG = Path("/tmp/kerberos-sandbox.log")
+_LOG = Path("/tmp/kerb-sandbox.log")
 
 
 def _log(msg: str) -> None:

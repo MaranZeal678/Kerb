@@ -1,4 +1,4 @@
-# Kerberos — 4-Minute Demo Script
+# Kerb — 4-Minute Demo Script
 
 Non-technical judges follow the story; technical judges get the reveal at 3:00. Rehearse until the sabotage beat is boring to you — it must feel dangerous to them and safe to you.
 
@@ -14,7 +14,7 @@ Type: *"Issue a refund for claim #4821."* The cursor moves. Fields fill. A reaso
 
 ## 0:15–0:45 — The problem
 
-> "Every company builds this four times: tutorials nobody reads, support docs that go stale the day the UI changes, brittle automations, and QA tests that break weekly. Four teams, four tools — for what is secretly **one artifact**: a validated sequence of steps against a real interface. Kerberos builds it once."
+> "Every company builds this four times: tutorials nobody reads, support docs that go stale the day the UI changes, brittle automations, and QA tests that break weekly. Four teams, four tools — for what is secretly **one artifact**: a validated sequence of steps against a real interface. Kerb builds it once."
 
 ## 0:45–2:15 — The dial (same brain, three levels of trust)
 
@@ -25,7 +25,7 @@ Same request, dial on **Guide**:
 
 Dial to **Copilot**:
 - AI proposes each step, presenter confirms, it executes. Fast, collaborative.
-- **The gate moment**: one step has low retrieval confidence — Kerberos refuses to auto-run it and forces a confirm. "It knows what it doesn't know, per step."
+- **The gate moment**: one step has low retrieval confidence — Kerb refuses to auto-run it and forces a confirm. "It knows what it doesn't know, per step."
 
 Dial to **Autopilot**:
 - Before touching the live app, show the **Runloop dry-run receipt**: the whole plan already ran in a disposable cloud sandbox — screenshots, final state diff. "It rehearsed in a sandbox before it touched anything real."
@@ -49,7 +49,7 @@ Trigger Sentinel: replay fails in a Runloop devbox → repair agent diagnoses dr
 
 ## 3:40–4:00 — Close
 
-> "Tutorials, support, automation, and QA were never four products. They're one plan at four levels of trust. Kerberos is the layer that lets any software teach you, help you, or just do it for you — safely."
+> "Tutorials, support, automation, and QA were never four products. They're one plan at four levels of trust. Kerb is the layer that lets any software teach you, help you, or just do it for you — safely."
 
 ## Vocabulary guardrails (binding — PostHog AI collision check, report §Review 7b)
 
