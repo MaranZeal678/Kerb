@@ -2,6 +2,35 @@
 
 **An execution layer that sits on top of existing software and does the work inside it — at a level of autonomy you choose, with proof that it still works.**
 
+<p align="center">
+  <code>Python</code> · <code>Reflex</code> · <code>Playwright</code> · retrieval over real policy documents · <b>no vendor SDK imported anywhere</b>
+</p>
+
+---
+
+Type **"issue a refund for claim #4821"** into an internal tool. Kerb reads the company's own
+refund policy, compiles a cited, step-by-step plan against the live interface, and runs it at
+whatever autonomy you pick — highlight-and-teach, confirm-each-step, or hands-off after a sandbox
+rehearsal.
+
+Then go rename a button.
+
+Kerb notices its own instructions broke, proposes a repair backed by evidence from the changed
+page, re-runs it in a disposable sandbox, and admits the fix only after it passes clean.
+**Guidance that would otherwise rot silently repairs itself — and proves the repair before anyone
+depends on it.**
+
+|  |  |
+|---|---|
+| **One artifact, four jobs** | The tutorial, the copilot, the automation and the regression test are the same validated plan object rendered four ways — not four systems maintained by four teams. |
+| **The model proposes; it never decides** | A registry bounds where it may act, plain-Python validation bounds what it may do there, a grounding score it cannot compute bounds how autonomously each step runs, and a sandbox bounds where consequences land first. |
+| **It runs with no model at all** | Unset the API key and the deterministic compiler still authors correct, conservative plans. That is the design, not a fallback. |
+| **It knows what it doesn't know** | Autonomy is capped per step by evidence, not per session by a setting. Turning the dial up cannot escalate a weakly-grounded step. |
+
+Built in two days. [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) is the four-minute walkthrough —
+including the beat where the interface is deliberately sabotaged on stage
+([`kerb/meridian/sabotage.py`](kerb/meridian/sabotage.py)) so the repair loop has to prove itself live.
+
 ---
 
 ## Abstract
